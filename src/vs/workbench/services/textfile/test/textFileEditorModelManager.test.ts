@@ -17,8 +17,9 @@ import { IEditorGroupService } from 'vs/workbench/services/group/common/groupSer
 import { TextFileEditorModel } from 'vs/workbench/services/textfile/common/textFileEditorModel';
 import { IEventService } from 'vs/platform/event/common/event';
 import { LocalFileChangeEvent } from 'vs/workbench/services/textfile/common/textfiles';
-import { FileChangesEvent, EventType as CommonFileEventType, FileChangeType } from 'vs/platform/files/common/files';
+import { FileChangesEvent, FileChangeType, IFileService } from 'vs/platform/files/common/files';
 import { IModelService } from 'vs/editor/common/services/modelService';
+import { Emitter } from 'vs/base/common/event';
 
 export class TestTextFileEditorModelManager extends TextFileEditorModelManager {
 
@@ -27,10 +28,15 @@ export class TestTextFileEditorModelManager extends TextFileEditorModelManager {
 	}
 }
 
+interface ITestFileService extends IFileService {
+	_onFileChanges: Emitter<FileChangesEvent>;
+}
+
 class ServiceAccessor {
 	constructor(
 		@IEditorGroupService public editorGroupService: TestEditorGroupService,
 		@IEventService public eventService: IEventService,
+		@IFileService public fileService: ITestFileService,
 		@IModelService public modelService: IModelService
 	) {
 	}
@@ -232,7 +238,7 @@ suite('Files - TextFileEditorModelManager', () => {
 		assert.ok(!model.isDisposed());
 
 		// delete event (watcher)
-		accessor.eventService.emit(CommonFileEventType.FILE_CHANGES, new FileChangesEvent([{ resource, type: FileChangeType.DELETED }]));
+		accessor.fileService._onFileChanges.fire(new FileChangesEvent([{ resource, type: FileChangeType.DELETED }]));
 
 		assert.ok(model.isDisposed());
 		assert.ok(!accessor.modelService.getModel(model.getResource()));
@@ -251,7 +257,7 @@ suite('Files - TextFileEditorModelManager', () => {
 		assert.ok(!model.isDisposed());
 
 		// change event (watcher)
-		accessor.eventService.emit(CommonFileEventType.FILE_CHANGES, new FileChangesEvent([{ resource, type: FileChangeType.UPDATED }]));
+		accessor.fileService._onFileChanges.fire(new FileChangesEvent([{ resource, type: FileChangeType.UPDATED }]));
 
 		assert.ok(model.isDisposed());
 		assert.ok(!accessor.modelService.getModel(model.getResource()));
@@ -274,7 +280,7 @@ suite('Files - TextFileEditorModelManager', () => {
 			return model.save().then(() => {
 
 				// change event (watcher)
-				accessor.eventService.emit(CommonFileEventType.FILE_CHANGES, new FileChangesEvent([{ resource, type: FileChangeType.UPDATED }]));
+				accessor.fileService._onFileChanges.fire(new FileChangesEvent([{ resource, type: FileChangeType.UPDATED }]));
 
 				assert.ok(!model.isDisposed());
 

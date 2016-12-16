@@ -20,7 +20,7 @@ import { BinaryEditorModel } from 'vs/workbench/common/editor/binaryEditorModel'
 import { FileEditorInput } from 'vs/workbench/parts/files/common/editors/fileEditorInput';
 import { ExplorerViewlet } from 'vs/workbench/parts/files/browser/explorerViewlet';
 import { IViewletService } from 'vs/workbench/services/viewlet/browser/viewlet';
-import { IFileOperationResult, FileOperationResult, FileChangesEvent, EventType, IFileService } from 'vs/platform/files/common/files';
+import { IFileOperationResult, FileOperationResult, FileChangesEvent, IFileService } from 'vs/platform/files/common/files';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 import { IWorkspaceContextService } from 'vs/platform/workspace/common/workspace';
 import { IStorageService } from 'vs/platform/storage/common/storage';
@@ -59,7 +59,7 @@ export class TextFileEditor extends BaseTextEditor {
 		super(TextFileEditor.ID, telemetryService, instantiationService, contextService, storageService, messageService, configurationService, eventService, editorService, themeService, textFileService);
 
 		// Clear view state for deleted files
-		this.toUnbind.push(this.eventService.addListener2(EventType.FILE_CHANGES, (e: FileChangesEvent) => this.onFilesChanged(e)));
+		this.toUnbind.push(this.fileService.onFileChanges(e => this.onFilesChanged(e)));
 	}
 
 	private onFilesChanged(e: FileChangesEvent): void {
